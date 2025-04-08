@@ -1,0 +1,93 @@
+/* Login.css */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #e2edf2; /* pastel light blue like the design */
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.login-container {
+  min-height: 100vh;
+  background-color: #e2edf2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.login-form {
+  background-color: #c3dbe5;
+  padding: 30px 25px;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 350px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+h1 {
+  font-weight: bold;
+  color: #0c3c60;
+  margin-bottom: 25px;
+  font-size: 2rem;
+  text-align: center;
+}
+
+input {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+button {
+  padding: 12px;
+  background-color: #0c3c60;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #0b2f4e;
+}
+
+.signup-text {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.signup-text a {
+  color: #0c3c60;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .login-form {
+    padding: 20px 15px;
+  }
+
+  input,
+  button {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .signup-text {
+    font-size: 13px;
+  }
+}
