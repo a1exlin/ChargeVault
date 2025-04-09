@@ -12,10 +12,7 @@ function App() {
       <Routes>
          {/* Default route — redirect to login */}
          <Route path="*" element={<Navigate to="/login" />} />
-<<<<<<< HEAD
         <Route path='/reserve' element={<ChargerGrid/>}></Route>
-=======
->>>>>>> f8b0454 (updates)
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/home" element={<Home />}></Route>
