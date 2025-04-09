@@ -1,0 +1,38 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 12px;
+  max-width: 400px;
+  margin: 30px auto;
+  padding: 0 10px;
+}
+
+.slot {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: 8px;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+/* Hover effect for desktop */
+@media (hover: hover) {
+  .slot:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* Slot color states */
+.slot.empty {
+  background-color: green;
+}
+
+.slot.reserved {
+  background-color: darkblue;
+}
