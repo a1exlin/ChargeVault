@@ -14,7 +14,7 @@ function HomePage() {
                     <a href="#">click here</a></p>
 
                 <div className="icon-bar">
-                    <button style={{fontsize: '32px'}} onClick={() => navigate('/home')}>🏠</button>
+                    <button style={{fontSize: '32px'}} onClick={() => navigate('/home')}>🏠</button>
                     <button style={{ fontSize: '32px' }} onClick={() => navigate('/reserve')}>🔋</button>
                     <button style={{ fontSize: '32px' }}>🔒</button>
 
