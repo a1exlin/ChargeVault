@@ -5,6 +5,7 @@
     font-family: sans-serif;
     flex-wrap: wrap; /* allows items to wrap on smaller screens */
     text-align: center;
+    
   }
   
   .center-panel {
