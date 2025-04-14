@@ -1,15 +1,21 @@
-import React from 'react';
-import '../css/Home.css';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import "../css/Home.css";
+import { useNavigate } from "react-router-dom";
 import { checkToken } from "./utils/auth";
 
-
 function HomePage() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    if (!checkToken()) {
-        navigate("/login");
-      }
+  useEffect(() => {
+      const runTokenCheck = async () => {
+        const isValid = await checkToken();
+        if (!isValid) {
+          navigate("/login");
+        }
+      };
+  
+      runTokenCheck();
+    }, [navigate]);
 
     return (
         <div className="home-container">
@@ -28,8 +34,23 @@ function HomePage() {
                 </div>
             </div>
 
+        <div className="icon-bar">
+          <button
+            style={{ fontSize: "32px" }}
+            onClick={() => navigate("/home")}
+          >
+            🏠
+          </button>
+          <button
+            style={{ fontSize: "32px" }}
+            onClick={() => navigate("/slots")}
+          >
+            🔋
+          </button>
+          <button style={{ fontSize: "32px" }}>🔒</button>
         </div>
-    );
+      </div>
+  );
 }
 
 export default HomePage;

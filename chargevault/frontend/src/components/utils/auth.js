@@ -2,11 +2,13 @@ export async function checkToken() {
     const token = localStorage.getItem("token") || "";
     const username = localStorage.getItem("username") || "";
 
+    console.log("Hello");
+
     // Deletes the local storage items if they come back as nothing
     if (username === "" || token === "") {
       localStorage.removeItem("token");
       localStorage.removeItem("username");
-      return;
+      return false;
     }
 
     const res = await fetch("http://localhost:3001/api/tokenValidate", {
@@ -22,6 +24,6 @@ export async function checkToken() {
     } else {
       localStorage.removeItem("token");
       localStorage.removeItem("username");
-      return;
+      return false;
     }
   }

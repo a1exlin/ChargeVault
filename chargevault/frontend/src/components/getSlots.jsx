@@ -7,9 +7,16 @@ function SlotList() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  if (!checkToken()) {
-    navigate("/login");
-  }
+  useEffect(() => {
+    const runTokenCheck = async () => {
+      const isValid = await checkToken();
+      if (!isValid) {
+        navigate("/login");
+      }
+    };
+
+    runTokenCheck();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchSlots = async () => {
