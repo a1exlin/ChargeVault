@@ -7,4 +7,3 @@ const userSchema = new mongoose.Schema({
   token: String
 }, { collection: 'users' });
 
-module.exports = mongoose.model('User', userSchema);
