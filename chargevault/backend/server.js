@@ -35,6 +35,7 @@ mongoose
   })
   .catch((err) => console.error("MongoDB error:", err));
 
+  
 
 // User Login token validation
 app.post("/api/tokenValidate", async (req, res) => {
@@ -215,9 +216,9 @@ changeStream.on("change", (change) => {
 
 // Adds code so the arduino can post data to the server and tell the backend to display a slot as full or empty
 //    /api/arduino/slots?slotID=2&action=free&ufid=UFID
-app.get("/api/arduino/slots", openCors, async (req, res) => {
-  //const { slotID, action, ufid } = req.body;
-  const { slotID, action, ufid } = req.query;
+app.post("/api/arduino/slots", openCors, async (req, res) => {
+  const { slotID, action, ufid } = req.body;
+  //const { slotID, action, ufid } = req.query;
 
   if (!slotID || !action || !ufid) {
     return res.status(400).json({ error: "Missing slotID, action, or ufid." });
