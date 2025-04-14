@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkToken } from "./utils/auth";
-
+import HomePage from "./home";
 function SlotList() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +98,7 @@ function SlotList() {
       }}
     >
       {" "}
+      <HomePage/>
       <h2>Charger Slots</h2>
       <table
         style={{ borderCollapse: "collapse", minWidth: "45%", maxWidth: "75%" }}
