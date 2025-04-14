@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <SoftwareSerial.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
 // BLE Configuration
 SoftwareSerial BTSerial(2, 3); // RX | TX
@@ -31,6 +33,11 @@ bool isUnlocked = false;
 unsigned long unlockStartTime = 0;
 const unsigned long unlockDuration = 1000;
 
+// Wi-Fi Configuration
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* serverURL = "http://192.168.1.100:3001/api/arduino/slots";
+
 void setup() {
   Serial.begin(9600);       // Monitor baud rate
   BTSerial.begin(9600);     // BLE module baud rate
@@ -48,6 +55,15 @@ void setup() {
     pinMode(pcbPins[i], OUTPUT);
     digitalWrite(pcbPins[i], LOW);
   }
+
+  // Wi-Fi Initialization
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWi-Fi connected!");
 
   Serial.println("System Ready");
 }
@@ -128,6 +144,7 @@ void handleRFID() {
     Serial.println("Access Granted - Unlocking");
     unlockDoor();
     BTSerial.println("Access Granted");
+    sendSlotPost(1, "hold", "Arduino001");
   } else {
     Serial.println("Access Denied");
     BTSerial.println("Access Denied");
@@ -156,5 +173,31 @@ void handleButtons() {
       }
     }
     lastButtonStates[i] = reading;
+  }
+}
+
+// Send slot POST to server
+void sendSlotPost(int slotID, const String& action, const String& ufid) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverURL);
+    http.addHeader("Content-Type", "application/json");
+
+    String payload = "{\"slotID\":\"" + String(slotID) + "\",\"action\":\"" + action + "\",\"ufid\":\"" + ufid + "\"}";
+    int responseCode = http.POST(payload);
+
+    Serial.print("POST /api/arduino/slots -> ");
+    Serial.println(responseCode);
+
+    if (responseCode > 0) {
+      String response = http.getString();
+      Serial.println("Response: " + response);
+    } else {
+      Serial.println("Failed to send POST");
+    }
+
+    http.end();
+  } else {
+    Serial.println("Wi-Fi not connected.");
   }
 }
