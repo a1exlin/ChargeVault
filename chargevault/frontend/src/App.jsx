@@ -5,7 +5,7 @@ import LoginPage from './components/LoginPage.jsx';
 import SignupPage from './components/signup.jsx';
 import Home from './components/home.jsx';
 import SlotList from './components/getSlots.jsx';
-
+import UserPage from './components/users.jsx';
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/home" element={<Home />}></Route>
         <Route path='/slots' element={<SlotList/>}></Route>
-
+        <Route path='/access_history'element={<UserPage/>}></Route>
       </Routes>
 
     </BrowserRouter>

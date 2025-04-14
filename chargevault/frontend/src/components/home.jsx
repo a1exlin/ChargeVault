@@ -17,23 +17,22 @@ function HomePage() {
       runTokenCheck();
     }, [navigate]);
 
-  return (
-    <div className="home-container">
-      <div className="center-panel">
-        <h2>Home</h2>
-        <p>You are signed into:</p>
-        <p>
-          <strong>
-            Midtown Atlanta Office
-            <br />
-            Building Renovation
-          </strong>
-        </p>
-        <p>
-          If this is not your construction site
-          <br />
-          <a href="#h">click here</a>
-        </p>
+    return (
+        <div className="home-container">
+            <div className="center-panel">
+                <h2>Home</h2>
+                <p>You are signed into:</p>
+                <p><strong>Midtown Atlanta Office<br />Building Renovation</strong></p>
+                <p>If this is not your construction site<br />
+                    <a href="#">click here</a></p>
+
+                <div className="icon-bar">
+                    <button style={{fontSize: '32px'}} onClick={() => navigate('/home')}>🏠</button>
+                    <button style={{ fontSize: '32px' }} onClick={() => navigate('/slots')}>🔋</button>
+                    <button style={{ fontSize: '32px' }} onClick={()=> navigate('/access_history')}>🔒</button>
+
+                </div>
+            </div>
 
         <div className="icon-bar">
           <button
@@ -51,7 +50,6 @@ function HomePage() {
           <button style={{ fontSize: "32px" }}>🔒</button>
         </div>
       </div>
-    </div>
   );
 }
 
