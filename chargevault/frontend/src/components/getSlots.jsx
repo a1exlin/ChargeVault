@@ -104,7 +104,7 @@ function SlotList() {
         flexDirection: "column", // keeps heading above the table
       }}
     >
-      {" "}
+      <HomePage/>
       <h2>Charger Slots</h2>
       <table
         style={{ borderCollapse: "collapse", minWidth: "45%", maxWidth: "75%" }}
