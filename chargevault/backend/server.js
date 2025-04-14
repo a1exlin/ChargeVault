@@ -177,6 +177,39 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+const changeStream = Slot.watch();
+
+changeStream.on("change", (change) => {
+  console.log("Change detected:", change);
+
+  if (change.operationType === "update" && change.updateDescription.updatedFields.status === "full") {
+    console.log("Status changed to full!");
+    // do something
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Setup HTTP + WebSocket server
 const server = http.createServer(app);
 const io = new Server(server, {
