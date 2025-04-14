@@ -51,7 +51,7 @@ function SlotList() {
         body: JSON.stringify({
           ufid: userId,
           slotID: slot.id,
-          status: "full",
+          status: "reserved",
         }),
       });
 
@@ -59,7 +59,7 @@ function SlotList() {
       if (result.success) {
         setSlots((prev) =>
           prev.map((s) =>
-            s.id === slot.id ? { ...s, status: "full", ufid: userId } : s
+            s.id === slot.id ? { ...s, status: "reserved", ufid: userId } : s
           )
         );
       }
@@ -105,7 +105,6 @@ function SlotList() {
       }}
     >
       {" "}
-      <HomePage/>
       <h2>Charger Slots</h2>
       <table
         style={{ borderCollapse: "collapse", minWidth: "45%", maxWidth: "75%" }}
@@ -126,12 +125,18 @@ function SlotList() {
         </thead>
         <tbody>
           {slots.map((slot) => {
-            const color = slot.status === "empty" ? "green" : "red";
             let text;
+            let color;
+
             if (slot.status === "empty") {
               text = "Available";
+              color = "green";
             } else if (slot.status === "full") {
               text = "Not Available";
+              color = "red";
+            } else if (slot.status === "reserved") {
+              text = "Pending";
+              color = "yellow";
             } else {
               text = "Status Error";
             }
@@ -179,7 +184,7 @@ function SlotList() {
                       <span style={{ cursor: "pointer"}} onClick={() => reserveSlot(slot)}>🔒</span>
                       <span style={{ cursor: "default", opacity: "0.3" }}>🔓</span>
                     </>
-                  ) : slot.status === "full" &&
+                  ) : (slot.status === "full" || slot.status === "reserved") &&
                     localStorage.getItem("username") === slot.ufid ? (
                     <>
                       <span style={{ cursor: "default", opacity: "0.3" }}>🔒</span>

@@ -24,6 +24,7 @@ function LoginHistory() {
     return (
 
         <div>
+
             <HomePage />
             <h2 style={{textAlign: 'center', fonntSize: '5vw',}}>Access History {username}</h2>
             <ul style={{textAlign: 'center'}}>
@@ -33,6 +34,7 @@ function LoginHistory() {
                     </li>
                 ))}
             </ul>
+
         </div>
     );
 }

@@ -33,6 +33,7 @@ function HomePage() {
 
                 </div>
             </div>
+
       </div>
   );
 }
