@@ -1,9 +1,16 @@
 import React from 'react';
 import '../css/Home.css';
 import { useNavigate } from 'react-router-dom';
+import { checkToken } from "./utils/auth";
+
 
 function HomePage() {
     const navigate = useNavigate();
+
+    if (!checkToken()) {
+        navigate("/login");
+      }
+
     return (
         <div className="home-container">
             <div className="center-panel">
@@ -15,7 +22,7 @@ function HomePage() {
 
                 <div className="icon-bar">
                     <button style={{fontSize: '32px'}} onClick={() => navigate('/home')}>🏠</button>
-                    <button style={{ fontSize: '32px' }} onClick={() => navigate('/reserve')}>🔋</button>
+                    <button style={{ fontSize: '32px' }} onClick={() => navigate('/slots')}>🔋</button>
                     <button style={{ fontSize: '32px' }}>🔒</button>
 
                 </div>
