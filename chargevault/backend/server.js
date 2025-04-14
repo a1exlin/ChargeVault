@@ -6,7 +6,10 @@ const { Server } = require("socket.io");
 require("dotenv").config();
 const User = require("./models/User");
 const bcrypt = require("bcryptjs");
-const Logs = require("../models/authLogs");
+const Logs = require("./models/authLogs");
+const Slot = require("./models/Slot");
+
+require("./watcher");
 
 // Express app and middleware
 const app = express();
@@ -34,8 +37,6 @@ mongoose
   })
   .catch((err) => console.error("MongoDB error:", err));
 
-  
-
 // User Login token validation
 app.post("/api/tokenValidate", async (req, res) => {
   const { token, username } = req.body;
@@ -48,8 +49,12 @@ app.post("/api/tokenValidate", async (req, res) => {
       return res.sendStatus(403);
     }
 
-    const realToken = JSON.parse(Buffer.from(user.token, 'base64').toString('utf-8'));
-    const triedToken = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+    const realToken = JSON.parse(
+      Buffer.from(user.token, "base64").toString("utf-8")
+    );
+    const triedToken = JSON.parse(
+      Buffer.from(token, "base64").toString("utf-8")
+    );
 
     const now = Math.floor(Date.now() / 1000);
 
@@ -57,7 +62,6 @@ app.post("/api/tokenValidate", async (req, res) => {
       await User.updateOne({ username }, { $set: { token: null } });
       return res.sendStatus(498);
     }
-
 
     if (realToken.token == triedToken.token) {
       res.status(200).json({ message: "Success" });
@@ -91,7 +95,9 @@ app.post("/login", async (req, res) => {
 
     await User.updateOne({ username }, { $set: { token: newToken } });
 
-    res.status(200).json({ message: "Success", token: newToken, username: username }); // Instead of returning success, return a login token that is randomly generated and stored in the database
+    res
+      .status(200)
+      .json({ message: "Success", token: newToken, username: username }); // Instead of returning success, return a login token that is randomly generated and stored in the database
   } catch (err) {
     // Catch all other errors and return generic failed message
     console.error("Login error:", err);
@@ -102,10 +108,10 @@ app.post("/login", async (req, res) => {
 function generateToken() {
   const payload = {
     token: Math.random().toString(36).slice(2),
-    exp: Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60)
+    exp: Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60,
   };
 
-  return Buffer.from(JSON.stringify(payload)).toString('base64');
+  return Buffer.from(JSON.stringify(payload)).toString("base64");
 }
 
 // Sign Up
@@ -132,30 +138,18 @@ app.post("/signup", async (req, res) => {
 });
 
 
-
-
-
-
-
-// Mongoose model for slots
-const SlotSchema = new mongoose.Schema({
-  id: Number,
-  status: String,
-  ufid: String,
-});
-const Slot = mongoose.model("Slot", SlotSchema);
-
 const initSlots = async () => {
   const existing = await Slot.find({}).lean();
-  if (existing.length !== 16) {
+  if (existing.length !== 9) {
     await Slot.deleteMany(); // Clear out any incomplete or corrupt set
-    const newSlots = Array.from({ length: 16 }, (_, i) => ({
+    const newSlots = Array.from({ length: 9 }, (_, i) => ({
       id: i + 1,
       status: "empty",
       ufid: null,
+      time: null,
     }));
     await Slot.insertMany(newSlots);
-    console.log("Reinitialized charger slots to 16 in MongoDB");
+    console.log("Reinitialized charger slots to 9 in MongoDB");
   }
 };
 
@@ -175,10 +169,16 @@ app.post("/api/reserve", async (req, res) => {
   const { ufid, slotID, status } = req.body;
   const numericSlotID = parseInt(slotID);
 
+  let time;
+  if ((status === "empty")) {
+    time = null;
+  } else {
+    time = Math.floor(Date.now() / 1000);
+  }
   try {
     await Slot.findOneAndUpdate(
       { id: numericSlotID },
-      { status, ufid },
+      { status, ufid, time },
       { new: true }
     );
 
@@ -190,26 +190,18 @@ app.post("/api/reserve", async (req, res) => {
   }
 });
 
-
-
-
-
 const changeStream = Slot.watch();
 
 changeStream.on("change", (change) => {
   console.log("Change detected:", change);
 
-  if (change.operationType === "update" && change.updateDescription.updatedFields.status === "full") {
+  if (
+    change.operationType === "update" &&
+    change.updateDescription.updatedFields.status === "full"
+  ) {
     console.log("Status changed to full!");
-    
-
-
-
   }
 });
-
-
-
 
 // Adds code so the arduino can post data to the server and tell the backend to display a slot as full or empty
 //    /api/arduino/slots?slotID=2&action=free&ufid=UFID
@@ -259,9 +251,6 @@ app.post("/api/arduino/slots", openCors, async (req, res) => {
   }
 });
 
-
-
-
 // Setup HTTP + WebSocket server
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -278,30 +267,13 @@ io.on("connection", async (socket) => {
   socket.emit("init", allSlots);
 });
 
-console.log("Logging access:" ,{
-  username,
-  ip: req.ip,
-  userAgent: req.headers,
-})
-app.get('/history/:username', async (req, res) => {
-  try {
-    const logs = await LoginLog.find({ username: req.params.username })
-      .sort({ loginTime: -1 });
-    res.json(logs);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   // Replace this block with your actual login validation logic
   const isAuthenticated = true; // just a placeholder
   if (!isAuthenticated) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 
   // Log the login attempt
@@ -309,12 +281,11 @@ app.post('/login', async (req, res) => {
     username,
     loginTime: new Date(),
     ip: req.ip,
-    userAgent: req.headers['user-agent']
+    userAgent: req.headers["user-agent"],
   });
 
-  res.json({ message: 'Login successful' });
+  res.json({ message: "Login successful" });
 });
-
 
 // Start server
 server.listen(3001, () => {

@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const LoginLogSchema = new mongoose.Schema({
     username: String,
     loginTime: String,
@@ -5,5 +7,5 @@ const LoginLogSchema = new mongoose.Schema({
     userAgent: String,
   }, { collection: 'authLogs' });
   
-  module.exports = mongoose.model('User', userSchema);
+  module.exports = mongoose.model('1', LoginLogSchema);
   
