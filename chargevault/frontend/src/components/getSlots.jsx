@@ -105,7 +105,6 @@ function SlotList() {
       }}
     >
       {" "}
-      <HomePage/>
       <h2>Charger Slots</h2>
       <table
         style={{ borderCollapse: "collapse", minWidth: "45%", maxWidth: "75%" }}
