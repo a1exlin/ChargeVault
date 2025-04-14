@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../css/Login.css"; // adjust path if needed
 import { checkToken } from "./utils/auth";
@@ -10,9 +10,16 @@ const LoginPage = () => {
   const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
 
-  if(checkToken()) {
-    navigate("/home");
-  }
+  useEffect(() => {
+    const runTokenCheck = async () => {
+      const isValid = await checkToken();
+      if (isValid) {
+        navigate("/home");
+      }
+    };
+
+    runTokenCheck();
+  }, [navigate]);
 
 
   const handleLogin = async (e) => {
