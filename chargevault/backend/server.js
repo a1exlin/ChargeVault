@@ -38,9 +38,9 @@ const Slot = mongoose.model("Slot", SlotSchema);
 
 const initSlots = async () => {
   const existing = await Slot.find({}).lean();
-  if (existing.length !== 16) {
+  if (existing.length !== 9) {
     await Slot.deleteMany(); // Clear out any incomplete or corrupt set
-    const newSlots = Array.from({ length: 16 }, (_, i) => ({
+    const newSlots = Array.from({ length: 9 }, (_, i) => ({
       id: i + 1,
       status: "empty",
       ufid: null,
