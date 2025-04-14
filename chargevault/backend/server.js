@@ -6,8 +6,7 @@ const { Server } = require("socket.io");
 require("dotenv").config();
 const User = require("./models/User");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { stat } = require("fs");
+const Logs = require("../models/authLogs");
 
 // Express app and middleware
 const app = express();
@@ -138,9 +137,6 @@ app.post("/signup", async (req, res) => {
 
 
 
-
-
-
 // Mongoose model for slots
 const SlotSchema = new mongoose.Schema({
   id: Number,
@@ -193,6 +189,7 @@ app.post("/api/reserve", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
 
 
 
@@ -265,16 +262,6 @@ app.post("/api/arduino/slots", openCors, async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
 // Setup HTTP + WebSocket server
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -290,6 +277,44 @@ io.on("connection", async (socket) => {
   const allSlots = await Slot.find().sort({ id: 1 });
   socket.emit("init", allSlots);
 });
+
+console.log("Logging access:" ,{
+  username,
+  ip: req.ip,
+  userAgent: req.headers,
+})
+app.get('/history/:username', async (req, res) => {
+  try {
+    const logs = await LoginLog.find({ username: req.params.username })
+      .sort({ loginTime: -1 });
+    res.json(logs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  // Replace this block with your actual login validation logic
+  const isAuthenticated = true; // just a placeholder
+  if (!isAuthenticated) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // Log the login attempt
+  await LoginLog.create({
+    username,
+    loginTime: new Date(),
+    ip: req.ip,
+    userAgent: req.headers['user-agent']
+  });
+
+  res.json({ message: 'Login successful' });
+});
+
 
 // Start server
 server.listen(3001, () => {
