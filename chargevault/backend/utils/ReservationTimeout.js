@@ -1,4 +1,4 @@
-const Slot = require("./models/Slot"); // Adjust path if needed
+const Slot = require("../models/slot"); // Adjust path if needed
 
 const activeTimers = new Map(); // Holds timers keyed by slot ID
 

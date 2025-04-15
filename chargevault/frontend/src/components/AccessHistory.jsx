@@ -1,7 +1,6 @@
-// LoginHistory.jsx
 import React, { useEffect, useState } from 'react';
 
-function LoginHistory() {
+function AccessHistory() {
     const [logs, setLogs] = useState([]);
     const username = localStorage.getItem('username');
 
@@ -31,4 +30,4 @@ function LoginHistory() {
     );
 }
 
-export default LoginHistory;
+export default AccessHistory;
