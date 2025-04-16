@@ -21,14 +21,24 @@ app.get('/', (req, res) => {
   res.send('Arduino Controller is up');
 });
 
-// Endpoint to trigger Arduino action
-app.get('/trigger', (req, res) => {
-  serial.write('TRIGGER\n', (err) => {
+app.get('/unlock', (req, res) => {
+  serial.write('UNLOCK\n', (err) => {
     if (err) {
       return res.status(500).send('Error writing to Arduino');
     }
     res.send('Command sent to Arduino');
   });
+  
+});
+
+app.get('/lock', (req, res) => {
+  serial.write('LOCK\n', (err) => {
+    if (err) {
+      return res.status(500).send('Error writing to Arduino');
+    }
+    res.send('Command sent to Arduino');
+  });
+  
 });
 
 app.listen(port, () => {

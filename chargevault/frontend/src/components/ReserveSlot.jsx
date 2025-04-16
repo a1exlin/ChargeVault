@@ -94,16 +94,33 @@ function ReserveSlot() {
     }
   }
 
-  async function triggerArduino() {
+  async function triggerArduinoUnlock() {
     try {
-      const response = await fetch("http://10.136.10.226:3002/trigger", {
+      const response = await fetch("http://10.136.10.226:3002/unlock", {
         method: "GET",
         // headers/body can go here if needed
       });
   
       const result = await response;
       if (result) {
-        console.log("Arduino Triggered!");
+        console.log("Arduino Unlocked!");
+        console.log(response);
+      }
+    } catch (err) {
+      console.error("Failed to talk to Arduino:", err);
+    }
+  }
+
+  async function triggerArduinoLock() {
+    try {
+      const response = await fetch("http://10.136.10.226:3002/lock", {
+        method: "GET",
+        // headers/body can go here if needed
+      });
+  
+      const result = await response;
+      if (result) {
+        console.log("Arduino Locked!");
         console.log(response);
       }
     } catch (err) {
@@ -217,7 +234,9 @@ function ReserveSlot() {
           })}
         </tbody>
       </table>
-      <button onClick={triggerArduino} style={{marginTop: "20px"}}>Unlock</button>
+      <button onClick={triggerArduinoUnlock} style={{marginTop: "20px"}}>Unlock</button>
+      <button onClick={triggerArduinoLock} style={{marginTop: "20px"}}>Lock</button>
+
     </div>
   );
 }
