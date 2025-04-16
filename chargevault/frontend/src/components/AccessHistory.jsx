@@ -1,24 +1,28 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import io from "socket.io-client";
+
+const socket = io("http://localhost:3001");
 
 function AccessHistory() {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/api/getLogs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-        const data = await response.json();
-        setLogs(data);
-      } catch (error) {
-        console.error("Failed to fetch logs:", error);
-      }
-    };
+    socket.emit("requestLogs");
 
-    fetchLogs();
+    socket.on("logs", (data) => {
+      setLogs(data);
+    });
+
+    socket.on("newLog", (newEntry) => {
+      setLogs((prev) => [newEntry, ...prev]);
+    });
+
+    return () => {
+      socket.off("logs");
+      socket.off("newLog");
+    };
   }, []);
+
 
   return (
     <div style={styles.wrapper}>
