@@ -66,6 +66,20 @@ function ReserveSlot() {
     } catch (err) {
       console.error("Failed to reserve slot:", err);
     }
+
+    try {
+      const response2 = await fetch("http://10.136.10.226:3002/reserve" + slot.id, {
+        method: "GET",
+      });
+  
+      const result = await response2;
+      if (result) {
+        console.log("Charger " + slot.id + " Shut Down");
+        console.log(response2);
+      }
+    } catch (err) {
+      console.error("Failed to talk to Arduino:", err);
+    }
   }
 
   async function releaseSlot(slot) {
@@ -91,6 +105,20 @@ function ReserveSlot() {
       }
     } catch (err) {
       console.error("Failed to free slot:", err);
+    }
+
+    try {
+      const response2 = await fetch("http://10.136.10.226:3002/unreserve" + slot.id, {
+        method: "GET",
+      });
+  
+      const result = await response2;
+      if (result) {
+        console.log("Charger " + slot.id + " Turned On");
+        console.log(response2);
+      }
+    } catch (err) {
+      console.error("Failed to talk to Arduino:", err);
     }
   }
 
