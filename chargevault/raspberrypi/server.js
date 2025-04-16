@@ -13,7 +13,7 @@ const ARDUINO_PORT = '/dev/ttyACM0'; // or COM3 on Windows
 
 const serial = new SerialPort({
   path: ARDUINO_PORT,
-  baudRate: 9600,
+  baudRate: 115200,
 });
 
 // Simple status route
