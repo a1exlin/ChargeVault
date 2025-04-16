@@ -22,16 +22,24 @@ router.post("/login", async (req, res) => {
     await User.updateOne({ username }, { $set: { token: newToken } });
 
     const time = Math.floor(Date.now() / 1000);
-    const ip = req.headers['x-fowarded-for']?.split(',').shift() || 
-    req.socket?.remoteAddress;
+    const rawIp =
+      req.headers["x-forwarded-for"]?.split(",").shift() ||
+      req.socket?.remoteAddress;
 
+    const cleanIp = (ip) => {
+      if (ip.startsWith("::ffff:")) return ip.replace("::ffff:", "");
+      if (ip === "::1") return "127.0.0.1";
+      return ip;
+    };
 
-       // Log access event
-        await loginHistory.create({
-          username: user.username,
-          time: time,
-          ip: ip,
-        });
+    const ip = cleanIp(rawIp); // ← Call the function with the raw IP
+
+    // Log access event
+    await loginHistory.create({
+      username: user.username,
+      time: time,
+      ip: ip,
+    });
 
     res
       .status(200)
