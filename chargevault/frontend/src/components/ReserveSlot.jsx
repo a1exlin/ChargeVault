@@ -94,6 +94,25 @@ function ReserveSlot() {
     }
   }
 
+  async function triggerArduino() {
+    try {
+      const response = await fetch("http://10.136.10.226:3002/trigger", {
+        method: "GET",
+        // headers/body can go here if needed
+      });
+  
+      const result = await response;
+      if (result) {
+        console.log("Arduino Triggered!");
+        console.log(response);
+      }
+    } catch (err) {
+      console.error("Failed to talk to Arduino:", err);
+    }
+  }
+  
+  
+
   return (
     <div
       style={{
@@ -198,6 +217,7 @@ function ReserveSlot() {
           })}
         </tbody>
       </table>
+      <button onClick={triggerArduino} style={{marginTop: "20px"}}>Unlock</button>
     </div>
   );
 }
