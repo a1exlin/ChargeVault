@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import "../css/Home.css";
 import { useNavigate } from "react-router-dom";
 import { checkToken } from "./utils/auth";
+import Logo from './imgs/logo.PNG';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ function HomePage() {
 
     return (
         <div className="home-container">
+          <img src={Logo} alt='Logo Picture'></img>
             <div className="center-panel">
                 <h2>Home</h2>
                 <p>You are signed into:</p>
