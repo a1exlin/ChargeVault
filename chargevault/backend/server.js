@@ -32,6 +32,8 @@ app.use("/api", require("./routes/arduino/slots"));
 app.use("/api", require("./routes/arduino/rfidAuth"));
 app.use("/api", require("./routes/Reservations"));
 app.use("/api", require("./routes/accessLogs"));
+app.use("/api", require("./routes/loginLogs"));
+
 
 
 // Start server only after DB connects

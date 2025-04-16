@@ -6,7 +6,7 @@ const loginHistorySchema = new mongoose.Schema(
     time: String,
     ip: String,
   },
-  { collection: "logHistory" }
+  { collection: "loginHistory" }
 );
 
 module.exports = mongoose.model("loginHistory", loginHistorySchema);

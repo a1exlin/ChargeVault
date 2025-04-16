@@ -1,63 +1,64 @@
-import { useEffect, useState } from "react";
-import io from "socket.io-client";
-
-const socket = io("http://localhost:3001");
+import React, { useEffect, useState } from "react";
 
 function AccessHistory() {
- const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState([]);
 
- useEffect(() => {
-   // Initial request for logs
-   socket.emit("requestLogs");
+  const [loading, setLoading] = useState(true);
 
-   // When full logs are returned
-   socket.on("logs", (data) => {
-     setLogs(data);
-   });
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/api/getLoginLogs", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        setLogs(data);
+      } catch (error) {
+        console.error("Failed to fetch slots:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-   // When a new log is added
-   socket.on("newLog", (newEntry) => {
-     setLogs((prev) => [newEntry, ...prev]);
-   });
+    fetchLogs();
+  }, []);
 
-   return () => {
-     socket.off("logs");
-     socket.off("newLog");
-   };
- }, []);
+  if (loading) return <p>Loading slots...</p>;
 
- return (
-   <div style={styles.wrapper}>
-     <h2 style={styles.heading}>Access Logs</h2>
+  return (
+    <div style={styles.wrapper}>
+      <h2 style={styles.heading}>Login History</h2>
 
-     <div style={styles.tableWrapper}>
-       <table style={styles.table}>
-         <thead>
-           <tr style={styles.headerRow}>
-             <th style={styles.headerCell}>Username</th>
-             <th style={styles.headerCell}>Action</th>
-             <th style={styles.headerCell}>Location</th>
-             <th style={styles.headerCell}>Time</th>
-           </tr>
-         </thead>
-         <tbody>
-           {logs.length > 0 ? logs.map((log, index) => (
-             <tr key={index} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
-               <td style={styles.cell}>{log.username}</td>
-               <td style={styles.cell}>{log.rfid}</td>
-               <td style={styles.cell}>{log.location || "—"}</td>
-               <td style={styles.cell}>
-                 {new Date(log.time * 1000).toLocaleString()}
-               </td>
-             </tr>
-           )) : (
-             <tr><td colSpan={4} style={styles.cell}>No logs yet</td></tr>
-           )}
-         </tbody>
-       </table>
-     </div>
-   </div>
- );
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
+          <thead>
+            <tr style={styles.headerRow}>
+              <th style={styles.headerCell}>Username</th>
+              <th style={styles.headerCell}>Time</th>
+              <th style={styles.headerCell}>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((log) => {
+              const readTime = new Date(log.time * 1000);
+
+              return (
+                <tr>
+                  {" "}
+                  <td>{log.username}</td>
+                  <td>{readTime.toLocaleString()}</td>
+                  <td>{log.ip}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 export default AccessHistory;
@@ -107,5 +108,4 @@ const styles = {
   oddRow: {
     backgroundColor: "#ffffff",
   },
- };
- 
+};
