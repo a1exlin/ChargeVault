@@ -1,14 +1,12 @@
 const mongoose = require('mongoose');
 
-
 const loginHistorySchema = new mongoose.Schema(
   {
     username: String,
     time: String,
-    rfid: String,
-    location: String,
+    ip: String,
   },
-  { collection: "accessLogs" }
+  { collection: "logHistory" }
 );
 
-module.exports = mongoose.model("accessLogs", loginHistorySchema);
+module.exports = mongoose.model("loginHistory", loginHistorySchema);

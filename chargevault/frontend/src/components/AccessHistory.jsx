@@ -4,57 +4,63 @@ import io from "socket.io-client";
 const socket = io("http://localhost:3001");
 
 function AccessHistory() {
-  const [logs, setLogs] = useState([]);
+ const [logs, setLogs] = useState([]);
 
-  useEffect(() => {
-    socket.emit("requestLogs");
+ useEffect(() => {
+   // Initial request for logs
+   socket.emit("requestLogs");
 
-    socket.on("logs", (data) => {
-      setLogs(data);
-    });
+   // When full logs are returned
+   socket.on("logs", (data) => {
+     setLogs(data);
+   });
 
-    socket.on("newLog", (newEntry) => {
-      setLogs((prev) => [newEntry, ...prev]);
-    });
+   // When a new log is added
+   socket.on("newLog", (newEntry) => {
+     setLogs((prev) => [newEntry, ...prev]);
+   });
 
-    return () => {
-      socket.off("logs");
-      socket.off("newLog");
-    };
-  }, []);
+   return () => {
+     socket.off("logs");
+     socket.off("newLog");
+   };
+ }, []);
 
+ return (
+   <div style={styles.wrapper}>
+     <h2 style={styles.heading}>Access Logs</h2>
 
-  return (
-    <div style={styles.wrapper}>
-      <h2 style={styles.heading}>Access Logs</h2>
-
-      <div style={styles.tableWrapper}>
-        <table style={styles.table}>
-          <thead>
-            <tr style={styles.headerRow}>
-              <th style={styles.headerCell}>Username</th>
-              <th style={styles.headerCell}>RFID</th>
-              <th style={styles.headerCell}>Location</th>
-              <th style={styles.headerCell}>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log, index) => (
-              <tr key={index} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
-                <td style={styles.cell}>{log.username}</td>
-                <td style={styles.cell}>{log.rfid}</td>
-                <td style={styles.cell}>{log.location || "—"}</td>
-                <td style={styles.cell}>
-                  {new Date(log.time * 1000).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+     <div style={styles.tableWrapper}>
+       <table style={styles.table}>
+         <thead>
+           <tr style={styles.headerRow}>
+             <th style={styles.headerCell}>Username</th>
+             <th style={styles.headerCell}>Action</th>
+             <th style={styles.headerCell}>Location</th>
+             <th style={styles.headerCell}>Time</th>
+           </tr>
+         </thead>
+         <tbody>
+           {logs.length > 0 ? logs.map((log, index) => (
+             <tr key={index} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
+               <td style={styles.cell}>{log.username}</td>
+               <td style={styles.cell}>{log.rfid}</td>
+               <td style={styles.cell}>{log.location || "—"}</td>
+               <td style={styles.cell}>
+                 {new Date(log.time * 1000).toLocaleString()}
+               </td>
+             </tr>
+           )) : (
+             <tr><td colSpan={4} style={styles.cell}>No logs yet</td></tr>
+           )}
+         </tbody>
+       </table>
+     </div>
+   </div>
+ );
 }
+
+export default AccessHistory;
 
 const styles = {
   wrapper: {
@@ -101,6 +107,5 @@ const styles = {
   oddRow: {
     backgroundColor: "#ffffff",
   },
-};
-
-export default AccessHistory;
+ };
+ 
