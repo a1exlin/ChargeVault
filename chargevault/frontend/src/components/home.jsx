@@ -20,8 +20,9 @@ function HomePage() {
 
     return (
         <div className="home-container">
-          <img src={Logo} alt='Logo Picture'></img>
+          
             <div className="center-panel">
+            <img src={Logo} alt='Logo Picture' className='logo'></img>
                 <h2>Home</h2>
                 <p>You are signed into:</p>
                 <p><strong>Midtown Atlanta Office<br />Building Renovation</strong></p>
@@ -34,6 +35,7 @@ function HomePage() {
                     <button style={{ fontSize: '32px' }} onClick={()=> navigate('/access_history')}>🔒</button>
 
                 </div>
+                
             </div>
 
       </div>
