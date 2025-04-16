@@ -29,7 +29,10 @@ app.use("", require("./routes/login"));
 app.use("", require("./routes/signin"));
 app.use("/api", require("./routes/tokenValidate"));
 app.use("/api", require("./routes/arduino/slots"));
+app.use("/api", require("./routes/arduino/rfidAuth"));
 app.use("/api", require("./routes/Reservations"));
+app.use("/api", require("./routes/accessLogs"));
+
 
 // Start server only after DB connects
 mongoose

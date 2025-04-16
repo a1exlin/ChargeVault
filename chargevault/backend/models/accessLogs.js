@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const accessLogsSchema = new mongoose.Schema(
   {
     username: String,
-    loginTime: String,
-    ip: String,
-    userAgent: String,
+    time: String,
+    rfid: String,
+    location: String,
   },
   { collection: "accessLogs" }
 );
