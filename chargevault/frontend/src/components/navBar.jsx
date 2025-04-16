@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import LogoutButton from ".//utils/auth.js";
+
 
 function NavBar() {
   const navigate = useNavigate();
@@ -70,7 +72,10 @@ function NavBar() {
         >
           🔒
         </button>
+        <LogoutButton/>
+
       </div>
+
     </div>
   );
 }

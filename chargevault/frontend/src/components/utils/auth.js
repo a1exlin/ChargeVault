@@ -1,3 +1,6 @@
+
+import { useNavigate } from 'react-router-dom';
+import '../../css/Logout.css'
 export async function checkToken() {
     const token = localStorage.getItem("token") || "";
     const username = localStorage.getItem("username") || "";
@@ -27,3 +30,23 @@ export async function checkToken() {
       return false;
     }
   }
+
+
+export default function LogoutButton() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    navigate("/login"); // change if your login route is named differently
+  };
+
+  return (
+    <div className='container'>
+ <button onClick={handleLogout}>
+      Logout
+    </button>
+    </div>
+
+  );
+}
