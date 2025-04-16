@@ -182,26 +182,38 @@ function ReserveSlot() {
               UFID / Reserver
             </th>
             <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+              Level
+            </th>
+            <th style={{ border: "1px solid #ccc", padding: "8px" }}>
               Reserve
             </th>
+            
           </tr>
         </thead>
         <tbody>
           {slots.map((slot) => {
             let text;
             let color;
+            let level;
 
             if (slot.status === "empty") {
               text = "Available";
               color = "green";
+              level = "No Battery";
             } else if (slot.status === "full") {
               text = "Not Available";
               color = "red";
+              level = "Charged"
             } else if (slot.status === "reserved") {
               text = "Pending";
               color = "yellow";
+              level = "Charging..."
             } else {
               text = "Status Error";
+            }
+
+            if(slot.sta) {
+
             }
 
             return (
@@ -234,6 +246,15 @@ function ReserveSlot() {
                   }}
                 >
                   {slot.ufid || "None"}
+                </td>
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    textAlign: "center",
+                  }}
+                >
+                  {level}
                 </td>
                 <td
                   style={{
