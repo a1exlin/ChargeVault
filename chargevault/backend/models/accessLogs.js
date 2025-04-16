@@ -10,4 +10,4 @@ const accessLogsSchema = new mongoose.Schema(
   { collection: "accessLogs" }
 );
 
-module.exports = mongoose.model("1", accessLogsSchema);
+module.exports = mongoose.model("accessLogs", accessLogsSchema);

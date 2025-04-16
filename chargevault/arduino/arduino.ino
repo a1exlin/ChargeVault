@@ -1,203 +1,257 @@
 #include <SPI.h>
 #include <MFRC522.h>
-#include <SoftwareSerial.h>
-#include <WiFi.h>
-#include <HTTPClient.h>
+#include <RTClib.h>
+#include <avr/pgmspace.h>
 
-// BLE Configuration
-SoftwareSerial BTSerial(2, 3); // RX | TX
-
-// RFID Configuration
 #define RST_PIN 9
-#define SS_PIN 10
-#define LOCK_PIN 6
+#define SS_PIN 53       // Mega SPI pin
+#define LOCK_PIN 8
+#define DOOR_SWITCH 7
+#define RELAY_COUNT 4
+#define BATTERY_PINS_COUNT 4
+
+// Relay control pins
+const int relayPins[RELAY_COUNT] = {2, 3, 4, 5};
+// Battery voltage sensing pins
+const int batteryPins[BATTERY_PINS_COUNT] = {A0, A1, A2, A3};
+
 MFRC522 rfid(SS_PIN, RST_PIN);
+RTC_DS3231 rtc; // Change class name
 
-// Authorized UIDs (add more as needed)
-byte storedUIDs[][4] = {
-  {0x5D, 0x22, 0x32, 0x02},  // Original tag
-  {0x53, 0xF4, 0x47, 0xDA}   // New tag
+struct AuthorizedUser {
+  const char* uid;
+  const char* name;
 };
-const int NUM_AUTH_TAGS = 2;  // Update when adding more tags
 
-// Button/PCB Configuration
-const int buttonPins[] = {2, 5};
-const int pcbPins[] = {3, 4};
-bool pcbStates[] = {false, false};
-bool lastButtonStates[] = {HIGH, HIGH};
-unsigned long debounceDelay = 50;
-unsigned long lastDebounceTimes[] = {0, 0};
+const AuthorizedUser authorizedUsers[] PROGMEM = {
+  {"a1b2c3d4", "Stephanie Ngo"},
+  {"5e6f7g8h", "Craig"}
+};
+const int AUTHORIZED_USER_COUNT = sizeof(authorizedUsers)/sizeof(AuthorizedUser);
 
-// Lock timing control
-bool isUnlocked = false;
-unsigned long unlockStartTime = 0;
-const unsigned long unlockDuration = 1000;
+String getUserName(String uid) {
+  for(int i=0; i<AUTHORIZED_USER_COUNT; i++) {
+    char storedUid[9];
+    strncpy_P(storedUid, (char*)pgm_read_ptr(&(authorizedUsers[i].uid)), 8);
+    storedUid[8] = '\0';
+    
+    if(uid.equalsIgnoreCase(storedUid)) {
+      char nameBuffer[20];
+      strncpy_P(nameBuffer, (char*)pgm_read_ptr(&(authorizedUsers[i].name)), 19);
+      nameBuffer[19] = '\0';
+      return String(nameBuffer);
+    }
+  }
+  return "Unauthorized";
+}
 
-// Wi-Fi Configuration
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-const char* serverURL = "http://192.168.1.100:3001/api/arduino/slots";
+struct Reservation {
+  String uid;
+  String userName; // Add this line
+  DateTime reserveTime;
+  int outlet;
+  bool batteryPresent;
+  bool confirmed;
+
+  // Add constructor
+  Reservation(String u = "", String un = "", DateTime rt = DateTime(), 
+              int o = -1, bool bp = false, bool c = false)
+    : uid(u), userName(un), reserveTime(rt), 
+      outlet(o), batteryPresent(bp), confirmed(c) {}
+};
+
+Reservation currentReservations[RELAY_COUNT];
+
+// Voltage divider configuration
+const float VOLTAGE_DIVIDER_RATIO = 4.0;  // Adjust based on your resistors
+const float BATTERY_MIN_VOLTAGE = 3.0;    // Minimum detection voltage
+const float BATTERY_MAX_VOLTAGE = 20.0;   // Max expected battery voltage
+const unsigned long RESERVATION_TIMEOUT = 300000; // 5 minutes
 
 void setup() {
-  Serial.begin(9600);       // Monitor baud rate
-  BTSerial.begin(9600);     // BLE module baud rate
-  Serial.println("Arduino BLE RFID Lock System Ready");
-
-  // RFID Initialization
+  Serial1.begin(115200);  // For Raspberry Pi communication
   SPI.begin();
+  
+  // Initialize RFID
   rfid.PCD_Init();
+  
+  // Initialize RTC
+  if (!rtc.begin()) {
+    Serial1.println("RTC initialization failed!");
+  }
+  if (rtc.lostPower()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+
+  // Initialize relays (HIGH = locked/OFF)
+  for(int i=0; i<RELAY_COUNT; i++) {
+    pinMode(relayPins[i], OUTPUT);
+    digitalWrite(relayPins[i], HIGH);
+  }
+
+  // Initialize lock and door switch
   pinMode(LOCK_PIN, OUTPUT);
   digitalWrite(LOCK_PIN, HIGH);
-
-  // Button/PCB Initialization
-  for (int i = 0; i < 2; i++) {
-    pinMode(buttonPins[i], INPUT_PULLUP);
-    pinMode(pcbPins[i], OUTPUT);
-    digitalWrite(pcbPins[i], LOW);
-  }
-
-  // Wi-Fi Initialization
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWi-Fi connected!");
-
-  Serial.println("System Ready");
+  pinMode(DOOR_SWITCH, INPUT_PULLUP);
 }
 
 void loop() {
-  handleRFID();
-  handleButtons();
-  handleBLE();
+  handlePiCommands();
+  checkRFID();
+  checkBatteryStatus();
+  checkReservationTimeouts();
+  manageDoorLock();
+  delay(100);
 }
 
-// Handle BLE commands
-void handleBLE() {
-  if (BTSerial.available()) {
-    char data = BTSerial.read();
-    Serial.print("Received from BLE: ");
-    Serial.println(data);
-
-    if (data == 'U') {
-      unlockDoor();
-    } else if (data == 'L') {
-      lockDoor();
+void handlePiCommands() {
+  if(Serial1.available()) {
+    String cmd = Serial1.readStringUntil('\n');
+    cmd.trim();
+    
+    if(cmd.startsWith("RESERVE:")) {
+      int outlet = cmd.substring(8).toInt();
+      if(outlet >=0 && outlet < RELAY_COUNT) {
+        digitalWrite(relayPins[outlet], LOW);
+        sendToPi("OUTLET:" + String(outlet) + ":RESERVED");
+      }
+    }
+    else if(cmd.startsWith("CANCEL:")) {
+      int outlet = cmd.substring(7).toInt();
+      if(outlet >=0 && outlet < RELAY_COUNT) {
+        digitalWrite(relayPins[outlet], HIGH);
+        currentReservations[outlet] = Reservation("", "", DateTime(), -1, false, false);
+        sendToPi("OUTLET:" + String(outlet) + ":AVAILABLE");
+      }
     }
   }
 }
 
-// Unlock the door
-void unlockDoor() {
-  Serial.println("Unlock command received");
-  digitalWrite(LOCK_PIN, LOW);
-  isUnlocked = true;
-  unlockStartTime = millis();
-}
+void checkRFID() {
+  if (!rfid.PICC_IsNewCardPresent()) return;
+  if (!rfid.PICC_ReadCardSerial()) return;
 
-// Lock the door
-void lockDoor() {
-  Serial.println("Lock command received");
-  digitalWrite(LOCK_PIN, HIGH);
-  isUnlocked = false;
-}
+  String uid = getUID();
+  DateTime now = rtc.now();
+  String userName = getUserName(uid);
+  
+  // Log access
+  sendToPi("LOGIN:" + uid + ":" + userName + ":" + now.timestamp());
 
-// Handle RFID detection and unlocking
-void handleRFID() {
-  // Auto-lock after a set duration
-  if (isUnlocked && (millis() - unlockStartTime >= unlockDuration)) {
-    lockDoor();
-    Serial.println("Lock Re-engaged");
-  }
-
-  // Check for new RFID card
-  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
+// Only allow authorized users
+  if(userName == "Unauthorized") {
+    sendToPi("ACCESS_DENIED:" + uid);
+    rfid.PICC_HaltA();
     return;
   }
 
-  Serial.print("Scanned UID: ");
-  for (byte i = 0; i < rfid.uid.size; i++) {
-    Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    Serial.print(rfid.uid.uidByte[i], HEX);
-  }
-  Serial.println();
-
-  // Check against authorized UIDs
-  bool accessGranted = false;
-  for (int t = 0; t < NUM_AUTH_TAGS; t++) {
-    bool match = true;
-    for (byte i = 0; i < 4; i++) {
-      if (rfid.uid.uidByte[i] != storedUIDs[t][i]) {
-        match = false;
-        break;
-      }
+  // Check existing reservations
+  for(int i=0; i<RELAY_COUNT; i++) {
+    if(currentReservations[i].uid == uid) {
+      currentReservations[i] = {uid, userName, now, i, false, false};
+      digitalWrite(relayPins[i], LOW);
+      currentReservations[i].confirmed = true;
+      sendToPi("CONFIRMED:" + String(i));
+      unlockDoor();
+      rfid.PICC_HaltA();
+      return;
     }
-    if (match) {
-      accessGranted = true;
+  }
+
+  // Find available outlet
+  for(int i=0; i<RELAY_COUNT; i++) {
+    if(currentReservations[i].uid == "") {
+      currentReservations[i] = Reservation(uid, userName, now, i, false, false);
+      digitalWrite(relayPins[i], LOW);
+      sendToPi("RESERVED:" + String(i) + ":" + uid);
+      unlockDoor();
       break;
     }
   }
-
-  if (accessGranted) {
-    Serial.println("Access Granted - Unlocking");
-    unlockDoor();
-    BTSerial.println("Access Granted");
-    sendSlotPost(1, "hold", "Arduino001");
-  } else {
-    Serial.println("Access Denied");
-    BTSerial.println("Access Denied");
-  }
-
+  
   rfid.PICC_HaltA();
-  rfid.PCD_StopCrypto1();
 }
 
-// Existing handleButtons() function remains unchanged
-void handleButtons() {
-  for (int i = 0; i < 2; i++) {
-    int reading = digitalRead(buttonPins[i]);
-
-    if (reading != lastButtonStates[i]) {
-      lastDebounceTimes[i] = millis();
-    }
-
-    if ((millis() - lastDebounceTimes[i]) > debounceDelay) {
-      if (reading == LOW) {
-        pcbStates[i] = !pcbStates[i];
-        digitalWrite(pcbPins[i], pcbStates[i] ? HIGH : LOW);
-        Serial.print("PCB ");
-        Serial.print(i);
-        Serial.println(pcbStates[i] ? " Activated" : " Deactivated");
+void checkBatteryStatus() {
+  for(int i=0; i<RELAY_COUNT; i++) {
+    float voltage = readBatteryVoltage(i);
+    bool present = voltage > BATTERY_MIN_VOLTAGE;
+    
+    // Update status
+    if(currentReservations[i].uid != "") {
+      currentReservations[i].batteryPresent = present;
+      
+      // Cancel if battery removed after 1 minute
+      if(!present && (rtc.now().unixtime() - currentReservations[i].reserveTime.unixtime()) > 60) {
+        cancelReservation(i);
       }
     }
-    lastButtonStates[i] = reading;
+    
+    // Send status update
+    sendToPi(String("STATUS:") + i + ":" + 
+            (present ? "OCCUPIED" : "AVAILABLE") + ":" + 
+            String(getBatteryPercentage(voltage)) + "%");
   }
 }
 
-// Send slot POST to server
-void sendSlotPost(int slotID, const String& action, const String& ufid) {
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    http.begin(serverURL);
-    http.addHeader("Content-Type", "application/json");
-
-    String payload = "{\"slotID\":\"" + String(slotID) + "\",\"action\":\"" + action + "\",\"ufid\":\"" + ufid + "\"}";
-    int responseCode = http.POST(payload);
-
-    Serial.print("POST /api/arduino/slots -> ");
-    Serial.println(responseCode);
-
-    if (responseCode > 0) {
-      String response = http.getString();
-      Serial.println("Response: " + response);
-    } else {
-      Serial.println("Failed to send POST");
+void checkReservationTimeouts() {
+  DateTime now = rtc.now();
+  for(int i=0; i<RELAY_COUNT; i++) {
+    if(currentReservations[i].uid != "" && 
+      (now.unixtime() - currentReservations[i].reserveTime.unixtime()) > RESERVATION_TIMEOUT) {
+      cancelReservation(i);
     }
-
-    http.end();
-  } else {
-    Serial.println("Wi-Fi not connected.");
   }
+}
+
+void manageDoorLock() {
+  static unsigned long lockTimer = 0;
+  static bool doorClosed = false;
+
+  if(digitalRead(DOOR_SWITCH) == LOW) { // Door closed
+    if(!doorClosed) {
+      lockTimer = millis();
+      doorClosed = true;
+    }
+    else if(millis() - lockTimer > 10000) {
+      digitalWrite(LOCK_PIN, HIGH);
+    }
+  }
+  else {
+    doorClosed = false;
+  }
+}
+
+// Helper functions
+String getUID() {
+  String uid;
+  for (byte i = 0; i < rfid.uid.size; i++) {
+    uid += String(rfid.uid.uidByte[i] < 0x10 ? "0" : "");
+    uid += String(rfid.uid.uidByte[i], HEX);
+  }
+  return uid;
+}
+
+float readBatteryVoltage(int outlet) {
+  int raw = analogRead(batteryPins[outlet]);
+  return (raw * (5.0 / 1023.0)) * VOLTAGE_DIVIDER_RATIO;
+}
+
+float getBatteryPercentage(float voltage) {
+  voltage = constrain(voltage, BATTERY_MIN_VOLTAGE, BATTERY_MAX_VOLTAGE);
+  return (voltage - BATTERY_MIN_VOLTAGE) / (BATTERY_MAX_VOLTAGE - BATTERY_MIN_VOLTAGE) * 100;
+}
+
+void unlockDoor() {
+  digitalWrite(LOCK_PIN, LOW);
+}
+
+void cancelReservation(int outlet) {
+  digitalWrite(relayPins[outlet], HIGH);
+  sendToPi("CANCELLED:" + String(outlet) + ":" + currentReservations[outlet].uid);
+  currentReservations[outlet] = Reservation("", "", DateTime(), -1, false, false);
+}
+
+void sendToPi(String message) {
+  Serial1.println(message);
 }
