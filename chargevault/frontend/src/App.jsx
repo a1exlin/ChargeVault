@@ -5,7 +5,7 @@ import SignupPage from "./components/SignupPage.jsx";
 import Home from "./components/home.jsx";
 import SlotList from "./components/ReserveSlot.jsx";
 import AccessHistory from "./components/AccessHistory.jsx";
-import NavBar from "./components/NavBar.jsx";
+import NavBar from "./components/navBar.jsx";
 
 function App() {
   return (
