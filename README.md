@@ -5,7 +5,7 @@ We have render a basic application on ios platform to view. This project suceeds
 ## Features
 - A secured Login and Signup where users token and cookies on local storage are managed properly
 - Mongo DB Cloud used to store user data
-- Locking/Unlock system on the vault is connected through arduino, and rasberry pi whicb sends data to this app
+- Locking/Unlock system on the vault is connected through arduino, and rasberry pi which sends data to this app
 - reserve/unreserve slots 1-9 for power drill battery slots
 - login history tab to see user logins, time, and IP address
 
