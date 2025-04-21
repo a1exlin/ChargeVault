@@ -6,7 +6,7 @@ We have render a basic application on ios platform to view. This project suceeds
 - A secured Login and Signup where users token and cookies on local storage are managed properly
 - Mongo DB Cloud used to store user data
 - Locking/Unlock system on the vault is connected through arduino, and rasberry pi which sends data to this app
-- reserve/unreserve slots 1-9 for power drill battery slots
+- Reserve/Unreserve slots 1-9 for power drill battery slots
 - login history tab to see user logins, time, and IP address
 
 ## Installations
@@ -15,7 +15,7 @@ The following list are required for this App to render properly
  - git clone and install dependencies
  - Visual Studio Code
  - git clone and install dependencies for ChargeVault in a1exlin repos. 
- - run backend server (npm start)
+ - Run backend server (npm start)
  - Xcode
  - properly set up developer from ios device 
  - run build on Xcode to ios device
