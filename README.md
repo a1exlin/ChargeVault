@@ -1,6 +1,6 @@
 # ChargeVault App
 This Website application is the software side of Chargevault, Senior Capstone Project Team 7 at Georgia Institute of Technology.
-We have render a basic application on ios platform to view. This project suceeds in storing a secure vault for drill batteries for construction sites only. For more details and purpose of this product, please reach out to any of the collaborators or the owner of this repo. 
+We have render a basic application on ios/android platform to view. This project suceeds in storing a secure vault for drill batteries for construction sites only. For more details and purpose of this product, please reach out to any of the collaborators or the owner of this repo. 
 
 ## Features
 - A secured Login and Signup where users token and cookies on local storage are managed properly
